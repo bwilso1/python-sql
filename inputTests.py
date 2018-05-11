@@ -1,5 +1,6 @@
 from myUtils import *
 from studentMenu import init_student
+from datetime import datetime
 import sys
 
 def main():
@@ -26,7 +27,8 @@ def main():
 		print("looping again")
 	
 	'''
-	
+	print(getLastID('student'))
+	print(getLastID('cart'))
 	myTup = ( (1,2,3),(4,5,6,7),(8,9,10,11,12))
 	print('size' + str(len(myTup)))
 	print('size' + str(len(myTup[0])))

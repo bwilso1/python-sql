@@ -3,7 +3,7 @@ import sys
 import pymysql
 pauseLen = 0.75
 
-def getInput(promptMessage,optionsList):
+def getInput(promptMessage,optionsList, longFormat=True):
 	choice = -1
 	while choice < 0:
 		print(promptMessage)
@@ -12,9 +12,11 @@ def getInput(promptMessage,optionsList):
 				print1(str(counter) + "\t")
 				for k in value:
 					print1(str(k) + ", ")
-				print1('\n')
 			else:
-				print(str(counter) + "\t" + str(value))
+				print1(str(counter) + "\t" + str(value))
+				
+			if longFormat:
+				print("")
 		choice = raw_input("enter choice: ")
 		try:
 			choice = int(choice)
@@ -32,7 +34,7 @@ def getInput(promptMessage,optionsList):
 def print1(message):
 	sys.stdout.write(message)
 	
-def confirm(promptMessage, parameters, long=True):
+def confirm(promptMessage, parameters, longFormat=True):
 
 	while True:
 		if parameters is not None:
@@ -42,7 +44,7 @@ def confirm(promptMessage, parameters, long=True):
 					sys.stdout.write("<none>\t")
 				else:
 					sys.stdout.write(str(element) + "\t")
-				if long:
+				if longFormat:
 					print("")
 				elif counter % 4 == 0 and counter!= 0:
 					print("")
@@ -59,14 +61,14 @@ def confirm(promptMessage, parameters, long=True):
 		time.sleep(0.75)
 			
 		
-def getLastID(tableName):
+def getLastID(tableName, idField='id'):
 	connection = getConnection()
 	connection.autocommit(True)
 	result = None
 	
 	try:
 		with connection.cursor() as curse:
-			sql = 'SELECT id FROM ' + tableName +';'
+			sql = 'SELECT '+idField+' FROM ' + tableName +';'
 			#connection.cursor().executemany(sql, (tableName,tableName))
 			curse.execute(sql)
 			data = curse.fetchall()

@@ -1,5 +1,6 @@
 from myUtils import *
 from pymysql.err import *
+from datetime import datetime
 
 def init_student():
 	message = "Student Module"
@@ -118,32 +119,75 @@ def viewSavedCartsList(student_id):
 	connection = getConnection()
 	connection.autocommit(True)
 	with connection.cursor() as cursor:
-		sql = "SELECT * FROM cart WHERE (cart_owner ="+str(student_id)+");"
+		choice = -1
+		sql = "SELECT * FROM cart WHERE (cart_owner =" + str(student_id) + ");"
 		cursor.execute(sql)
 		cartTuples = cursor.fetchall()
 		cartList = tupleTransform(cartTuples)
 		#cartList.append("Return...")
-		if len(cartList) == 1:
-			print("you have no carts...")
-			connection.close()
-		else:
-			while choice != (len(cartList) - 1):
+
+		while choice != (len(cartList) - 1):
+			if len(cartList) == 1:
+				print("you have no carts...")
+				choice = 0
+				connection.close()
+			else:
 				choice = getInput("Select Cart to view",cartList)
-				if choice != (len(cartList) - 1):
-					connection.close()	#NOTE may make more sense to pass in connection.
+				if choice != (len(cartList) - 1):  #make sure they didn't hit "back"
+					connection.close()
 					viewCart(student_id,cartList[choice][0])	#TODO - continue here.
-			
-	if connection.open():  #TODO - May cause issues
-		connection.close()
+					choice = (len(cartList) - 1)  #need to terminate...make user go back
+				
 	returnToPreviousMessage()
 
 def viewCart(student_id, cart_id):
-	sql = ''
+	sql = 'select book.inventory_id, bookclass.title, bookclass.author, book.format, cartcontents.purchase_type, cartcontents.quantity from (cartContents, book, bookclass) where (cartcontents.cart_id = %s and cartcontents.inventory_id = book.inventory_id and book.ISBN13 = bookclass.ISBN13);'
+	options = ["Add Books to cart","Remove Books from cart", "Order Books in Cart", "Return to previous menu"]
+	connection = getConnection()
+	connection.autocommit(True)
+	with connection.cursor() as cursor:
+		cursor.execute(sql,[cart_id,])
+		resultsTuple = cursor.fetchall()
+		resultsList = tupleTransform(resultsTuple,False)
+		connection.close()
+		choice = -1
+		#while choice != (len(options) -1):  #removed, we are just falling through, user will need multiple calls
+		for row in resultsList:
+			for element in row:
+				if len(element) > 30:
+					print1(str(element[:30]) + "... , ")
+				else:
+					print1(str(element) + ", ")
+		choice = getInput("Choose Option: ",False)
+		if choice == 0:
+			addBooksToCart(student_id, cart_id)
+		elif choice == 1:
+			removeBooksFromCart(student_id,cart_id)
+		elif choice == 2:
+			placeOrder(student_id,cart_id)
+				
+		
+
+		
 	
 def createNewCart(student_id):
-	print('not yet implemented')
+	connection = getConnection()
+	connection.autocommit(True)
+	
+	sql = 'INSERT INTO cart (cart_owner,date_created,update_date) VALUES (%s, $s, %s);'
+	timestamp = datetime.now().date()
+	with connection.cursor() as cursor:
+		cursor.execute(sql,[student_id,timestamp,timestamp])
+		connection.close()
+	
+	print("Cart Creation success! Cart ID: " + str(getLastID('cart')))
+	
 def viewOrderList(student_id):
 	print('not yet implemented')
 	
 def rateBook(student_id):
 	print('not yet implemented')
+	
+def removeBooksFromCart(student_id,cart_id):
+	print("not yet implemented")
+	returnToPreviousMessage()
