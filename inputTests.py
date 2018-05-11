@@ -26,6 +26,18 @@ def main():
 		print("looping again")
 	
 	'''
+	
+	myTup = ( (1,2,3),(4,5,6,7),(8,9,10,11,12))
+	print('size' + str(len(myTup)))
+	print('size' + str(len(myTup[0])))
+	myList = tupleTransform(myTup)
+	for row in myList:
+		if type(row) is list:
+			for elm in row:
+				print1(str(elm) + "\t")
+		else:
+			print row
+		print("")
 	connection = getConnection()
 	#connection.autocommit(True)
 	result = None
@@ -51,7 +63,7 @@ def main():
 		something = getLastID('student')
 		print(str(something) + str(type(something)))
 		
-	choice = confirm("continue sql test?",None)
+	choice = confirm("Begin init_student?",None)
 	if choice:
 		while choice:
 			init_student()

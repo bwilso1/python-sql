@@ -103,3 +103,15 @@ def getConnection():
 	user='root',
 	password='alpha',
 	db='bookfetch')
+
+def tupleTransform(collection , appendQuit=True):
+	result = []
+	rows = len(collection)
+	for i in range(0,rows):
+		temp = list(collection[i])
+		result.append(temp)
+	
+	result.append("Quit/Return")
+	return result
+	
+	

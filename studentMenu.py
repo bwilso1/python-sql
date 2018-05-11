@@ -12,7 +12,7 @@ def init_student():
 		elif choice == 1:
 			studentLogin()
 		
-	print('returning to previous menu...')
+	returnToPreviousMessage()
 	
 	
 def createStudent():
@@ -76,12 +76,13 @@ def studentLogin():
 					sql = 'SELECT id,first_name, last_name, email FROM student WHERE (first_name LIKE %s);'
 					cursor.execute(sql, (str(choice),))
 					resultsTuple = cursor.fetchall()
-					resultsList = list(resultsTuple)
-					resultsList.append("Quit/Go Back...")
+					resultsList = tupleTransform(resultsTuple)
+					#resultsList.append("Quit/Go Back...")
 					student = getInput("Select Student", resultsList)
-					print("you went with" + str(student))
+					#print("you went with" + str(student))
 					if student == (len(resultsList) - 1):
 						choice = "exit"
+						connection.close()
 					else:
 						connection.close()
 						#view this students options
@@ -94,8 +95,55 @@ def studentLogin():
 					print("please enter some text")
 				
 		returnToPreviousMessage()
-	if connection.open():
-		connection.close()
+
 		
 def viewStudentOptions(student_id):
-	options = ["View Carts/Place Order","Create new Cart","View/Cancel Orders""Rate Book","Logout"]
+	options = ["View Saved Carts/Place Order","Create new Cart","View/Cancel Orders", "Rate Book","Logout"]
+	choice = -1
+	while choice != (len(options) -1):
+		choice = getInput("Select Option", options)
+		if choice == 0:
+			viewSavedCartsList(student_id)
+		elif choice == 1:
+			createNewCart(student_id)
+		elif choice == 2:
+			viewOrderList(student_id)
+		elif choice == 3:
+			rateBook(student_id)
+	
+	returnToPreviousMessage()
+			
+			
+def viewSavedCartsList(student_id):
+	connection = getConnection()
+	connection.autocommit(True)
+	with connection.cursor() as cursor:
+		sql = "SELECT * FROM cart WHERE (cart_owner ="+str(student_id)+");"
+		cursor.execute(sql)
+		cartTuples = cursor.fetchall()
+		cartList = tupleTransform(cartTuples)
+		#cartList.append("Return...")
+		if len(cartList) == 1:
+			print("you have no carts...")
+			connection.close()
+		else:
+			while choice != (len(cartList) - 1):
+				choice = getInput("Select Cart to view",cartList)
+				if choice != (len(cartList) - 1):
+					connection.close()	#NOTE may make more sense to pass in connection.
+					viewCart(student_id,cartList[choice][0])	#TODO - continue here.
+			
+	if connection.open():  #TODO - May cause issues
+		connection.close()
+	returnToPreviousMessage()
+
+def viewCart(student_id, cart_id):
+	sql = ''
+	
+def createNewCart(student_id):
+	print('not yet implemented')
+def viewOrderList(student_id):
+	print('not yet implemented')
+	
+def rateBook(student_id):
+	print('not yet implemented')
