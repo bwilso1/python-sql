@@ -164,20 +164,27 @@ def viewCart(student_id, cart_id):
 		elif choice == 1:
 			removeBooksFromCart(student_id,cart_id)
 		elif choice == 2:
-			placeOrder(student_id,cart_id)
+			placeOrder(student_id,cart_id)  #prompt user for payment info, check quantities, copy into order, delete cart.
 				
 		
 
 		
 	
 def createNewCart(student_id):
+	myCartID = getLastID('cart') + 1
 	connection = getConnection()
 	connection.autocommit(True)
+	timestamp = str(datetime.now().date())
+	#sql = 'INSERT INTO cart (id, cart_owner,date_created,update_date) VALUES ( %s, %s, $s, %s);'
 	
-	sql = 'INSERT INTO cart (cart_owner,date_created,update_date) VALUES (%s, $s, %s);'
-	timestamp = datetime.now().date()
+	#no clue why the fuck I had to do this....
+	sql = 'INSERT INTO cart (id, cart_owner,date_created,update_date) VALUES ('+str(myCartID)+','+str(student_id)+',"'+timestamp+'","' +timestamp+ '");'
+	
+	
 	with connection.cursor() as cursor:
-		cursor.execute(sql,[student_id,timestamp,timestamp])
+		myList = (str(myCartID), str(student_id),str(timestamp),str(timestamp))
+		#cursor.execute(sql, myList)
+		cursor.execute(sql)
 		connection.close()
 	
 	print("Cart Creation success! Cart ID: " + str(getLastID('cart')))
@@ -187,7 +194,13 @@ def viewOrderList(student_id):
 	
 def rateBook(student_id):
 	print('not yet implemented')
+
+def placeOrder(student_id,cart_id):
+	print('not yet impelmented')
 	
+def addBooksToCart(student_id, cart_id):
+	print("not yet implemented")
 def removeBooksFromCart(student_id,cart_id):
 	print("not yet implemented")
 	returnToPreviousMessage()
+	
