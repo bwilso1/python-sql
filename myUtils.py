@@ -56,6 +56,7 @@ def confirm(promptMessage, parameters, long=True):
 		except ValueError:
 			print('please enter "y" or "n"')
 		print('please enter "y" or "n"')
+		time.sleep(0.75)
 			
 		
 def getLastID(tableName):
@@ -92,7 +93,10 @@ def showAllRecords(tableName):
 	
 	finally:
 		connection.close()
-		
+	
+def returnToPreviousMessage():
+	time.sleep(pauseLen)
+	print("Returning to previous menu...")
 
 def getConnection():
 	return pymysql.connect(host='localhost',

@@ -1,5 +1,5 @@
 from myUtils import *
-from studentMenu import createStudent
+from studentMenu import init_student
 import sys
 
 def main():
@@ -54,7 +54,7 @@ def main():
 	choice = confirm("continue sql test?",None)
 	if choice:
 		while choice:
-			createStudent()
+			init_student()
 			choice = confirm("continue? ", None)
 	
 main()
