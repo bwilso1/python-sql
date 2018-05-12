@@ -6,7 +6,7 @@ pauseLen = 0.75
 def getInput(promptMessage,optionsList, longFormat=True):
 	choice = -1
 	while choice < 0:
-		print(promptMessage)
+		print("\n" + promptMessage)
 		for counter, value in enumerate(optionsList):
 			if type(value) is list:
 				print1(str(counter) + "\t")
@@ -17,10 +17,14 @@ def getInput(promptMessage,optionsList, longFormat=True):
 				
 			if longFormat:
 				print("")
+			else:
+				print1("\t")
 		choice = raw_input("enter choice: ")
 		try:
 			choice = int(choice)
 			if choice > (len(optionsList) - 1):
+				choice = -1
+			elif choice < 0:
 				choice = -1
 		except ValueError:
 			choice = -1
@@ -112,8 +116,28 @@ def tupleTransform(collection , appendQuit=True):
 	for i in range(0,rows):
 		temp = list(collection[i])
 		result.append(temp)
-	
-	result.append("Quit/Return")
+	if appendQuit:
+		result.append("Quit/Return")
 	return result
 	
+def header(message):
+	print("\n---------- "+message+" ----------")
 	
+def junkTest(inCursor):
+	sql = "SELECT * FROM student WHERE first_name LIKE '%J%';"
+	inCursor.execute(sql)
+	result = inCursor.fetchall()
+	resultList = tupleTransform(result,False)
+	for row in resultList:
+		print row
+		
+def printShortenedList(inputList):
+	for row in inputList:
+		for element in row:
+			if element is str:
+				if len(element) > 30:
+					print1(str(element[:30]) + "... , ")
+				else:
+					print1(str(element) + ", ")
+			else:
+				print1(str(element) + " ")

@@ -54,8 +54,14 @@ def main():
 		sql = "insert into student (id, first_name) values(%s, %s);"
 		curse.execute(sql,("4001","alex"))
 		#connection.commit()
-
-		
+		sql = "SELECT * FROM bookclass where (title LIKE '%The%');"
+		curse.execute(sql)
+		result = curse.fetchall()
+		resultList = tupleTransform(result,False)
+		for row in resultList:
+			print row
+		print("")
+		junkTest(curse)
 	
 	connection.close();
 		
