@@ -47,29 +47,20 @@ def main():
 	with connection.cursor() as curse:
 		sql = 'DELETE FROM student where (id > 2999);'
 		curse.execute(sql)
-		#connection.commit()
 		sql = 'INSERT INTO student (id, first_name, dob) VALUES (5000, "johnny", "1985/9/13");'
 		curse.execute(sql)
-		#connection.commit()
 		sql = "insert into student (id, first_name) values(%s, %s);"
 		curse.execute(sql,("4001","alex"))
-		#connection.commit()
-		sql = "SELECT * FROM bookclass where (title LIKE '%The%');"
-		curse.execute(sql)
-		result = curse.fetchall()
-		resultList = tupleTransform(result,False)
-		for row in resultList:
-			print row
-		print("")
+
 		junkTest(curse)
 	
 	connection.close();
 		
 	
 	
-	while  confirm("get max?", None):
-		something = getLastID('student')
-		print(str(something) + str(type(something)))
+
+	something = getLastID('student')
+	print(str(something) + str(type(something)))
 		
 	choice = confirm("Begin init_student?",None)
 	if choice:

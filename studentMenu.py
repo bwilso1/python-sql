@@ -103,7 +103,7 @@ def studentLogin():
 
 		
 def viewStudentOptions(student_id):
-	options = ["View Saved Carts/Place Order","Create new Cart","View/Cancel Orders", "Rate Book","Logout"]
+	options = ["View Saved Carts/Place Order", "Create new Cart", "Delete Cart", "View/Cancel Orders", "Rate Book","Logout"]
 	choice = -1
 	while choice != (len(options) -1):
 		header("Student Menu for ID: "+ str(student_id))
@@ -113,75 +113,81 @@ def viewStudentOptions(student_id):
 		elif choice == 1:
 			createNewCart(student_id)
 		elif choice == 2:
-			viewOrderList(student_id)	#TODO
+			viewSavedCartsList(student_id,True)
 		elif choice == 3:
-			rateBook(student_id)	#TODO
+			viewOrderList(student_id)
+		elif choice == 4:
+			rateBook(student_id)
 	
 	returnToPreviousMessage()
 			
 			
-def viewSavedCartsList(student_id):
+def viewSavedCartsList(student_id, delete=False):
 	connection = getConnection()
 	connection.autocommit(True)
+	sql = "SELECT * FROM cart WHERE (cart_owner =" + str(student_id) + ");"
 	with connection.cursor() as cursor:
 		choice = -1
-		sql = "SELECT * FROM cart WHERE (cart_owner =" + str(student_id) + ");"
+		
 		cursor.execute(sql)
 		cartTuples = cursor.fetchall()
 		cartList = tupleTransform(cartTuples)
-		#cartList.append("Return...")
 
 		while choice != (len(cartList) - 1):
+
 			header("View Carts for ID: " + str(student_id))
 			if len(cartList) == 1:
 				print("you have no carts...")
 				choice = 0
-				connection.close()
 			else:
-				choice = getInput("Select Cart to view",cartList)
+				if delete:
+					choice = getInput("Select Cart to DELETE\n\tcart_id, owner_id, date_created, date_updated",cartList)
+				else:
+					choice = getInput("Select Cart to view\n\tcart_id, owner_id, date_created, date_updated",cartList)
 				if choice != (len(cartList) - 1):  #make sure they didn't hit "back"
-					connection.close()
-					viewCart(student_id,cartList[choice][0])
-					choice = (len(cartList) - 1)  #need to terminate...make user go back
 				
+					if delete:
+						deleteCart(student_id, cartList[choice][0], cursor)
+					else:
+						viewCart(student_id,cartList[choice][0], cursor)
+					choice = 0
+			
+			cursor.execute(sql)
+			cartTuples = cursor.fetchall()
+			cartList = tupleTransform(cartTuples)
+			
+	connection.close()
 	returnToPreviousMessage()
 
-def viewCart(student_id, cart_id):
+def viewCart(student_id, cart_id, cursor):
 	sql = 'select bookclass.title, bookclass.author, book.format, cartcontents.purchase_type, book.inventory_id, cartcontents.quantity from (cartContents, book, bookclass) where (cartcontents.cart_id = %s and cartcontents.inventory_id = book.inventory_id and book.ISBN13 = bookclass.ISBN13);'
 	titles = ["Title", "Author","Format", "Transaction Type", "Inventory ID", "Quantity"]
 	options = ["Add Books to cart","Delete Cart", "Order Books in Cart", "Return to previous menu"]
-	connection = getConnection()
-	connection.autocommit(True)
-	with connection.cursor() as cursor:
+
+	choice = -1
+	while choice != (len(options) -1):
+		cursor.execute(sql,[cart_id,])
+		resultsTuple = cursor.fetchall()
+		resultsList = tupleTransform(resultsTuple,False)
 		
+		# printing books we found in users cart
+		header("Viewing Cart.  Student_ID: " + str(student_id) + "  CartID: " + str(cart_id))
+		if len(resultsList) == 0:
+			print("<cart is empty>")
+		else:
+			for value in titles:
+				print1(value + "\t")
+			printShortenedList(resultsList)
 		
+		choice = getInput("Choose Option: ",options)
+		if choice == 0:
+			addBooksToCart(student_id, cart_id, cursor)
+		elif choice == 1:
+			deleteCart(student_id,cart_id,cursor)
+		elif choice == 2:
+			#prompt user for payment info, check quantities, copy into order, delete cart.
+			placeOrder(student_id,cart_id, cursor)
 		
-		choice = -1
-		while choice != (len(options) -1):
-			cursor.execute(sql,[cart_id,])
-			resultsTuple = cursor.fetchall()
-			resultsList = tupleTransform(resultsTuple,False)
-			
-			# printing books we found in users cart
-			header("Viewing Cart.  Student_ID: " + str(student_id) + "  CartID: " + str(cart_id))
-			if len(resultsList) == 0:
-				print("<cart is empty>")
-			else:
-				for value in titles:
-					print1(value + "\t")
-				printShortenedList(resultsList)
-			
-			choice = getInput("Choose Option: ",options)
-			if choice == 0:
-				addBooksToCart(student_id, cart_id, cursor)
-			elif choice == 1:
-				deleteCart(student_id,cart_id,cursor)
-			elif choice == 2:
-				#prompt user for payment info, check quantities, copy into order, delete cart.
-				placeOrder(student_id,cart_id, cursor)  #TODO - need to add ORDER CONTENTS
-	
-	connection.close()
-				
 		
 def createNewCart(student_id):
 	myCartID = getLastID('cart') + 1
@@ -189,11 +195,7 @@ def createNewCart(student_id):
 	connection.autocommit(True)
 	timestamp = str(datetime.now().date())
 	sql = "INSERT INTO cart (id, cart_owner,date_created,update_date) VALUES ( %s, %s, %s, %s);"
-	
-	#no clue why I had to do this....
-	#sql = 'INSERT INTO cart (id, cart_owner,date_created,update_date) VALUES ('+str(myCartID)+','+str(student_id)+',"'+timestamp+'","' +timestamp+ '");'
-	#answer, I changed the font so % and $ & dont look too similar
-	#this was left as a reminder for whoever reads this.
+
 	
 	with connection.cursor() as cursor:
 		myList = [myCartID,student_id,str(timestamp),str(timestamp)]
@@ -203,15 +205,100 @@ def createNewCart(student_id):
 		connection.close()
 	
 	print("Cart Creation success! Cart ID: " + str(getLastID('cart')))
+	returnToPreviousMessage()
 	
-def viewOrderList(student_id):
-	print('not yet implemented') #TODO - Need to implement
+def viewOrderList(student_id):  #TODO - Need to implement
+	print('not yet implemented')
 	
-def rateBook(student_id):
-	print('not yet implemented') #TODO - Need to implement
+def rateBook(student_id): #TODO - Need to implement
+	print('not yet implemented')
 
-def placeOrder(student_id,cart_id, cursor):
-	print('not yet impelmented') #TODO - Need to implement
+def placeOrder(student_id,cart_id, cursor): #TODO - Need to debug.
+	prompts = ["Credit Card Number", "EXP date MM/YYYY","Card Issuer (VISA/Mastercard/AMEX)"]
+	ship_speeds = ["standard","2-day","1-day"]
+	answers = []
+	
+	orderID = (getLastID('orders','id',cursor) + 1)
+	choice = False
+	
+	header("Cart " + str(cart_id) + " Contents")
+	sql = 'select bookclass.title, bookclass.author, book.format, cartcontents.purchase_type, book.inventory_id, cartcontents.quantity from (cartContents, book, bookclass) where (cartcontents.cart_id = %s and cartcontents.inventory_id = book.inventory_id and book.ISBN13 = bookclass.ISBN13);'
+	titles = ["Title","Author","Format","Transaction Type","Inventory ID","Quantity"]
+	cursor.execute(sql, [cart_id,])
+	resultTuple = cursor.fetchall()
+	cartContents = tupleTransform(resultTuple,False)
+	for value in titles:
+		print1(value + ", ")
+	printShortenedList(cartContents)
+	
+	choice = confirm("continue with order?")
+	while choice is False:
+		answers[:] = []
+		for value in prompts:
+			answers.append(raw_input("Enter "+value+": "))
+			
+		x = getInput("Select Shipping Speed",ship_speeds,True)
+		answers.append( ship_speeds[x] )
+		choice = confirm("Is this info correct?",answers)
+
+	
+	#-----check avail quantities & adjust ------
+	sql = "SELECT inventory_id, quantity from book;"
+	cursor.execute(sql)
+	availList = cursor.fetchall()
+	for row in cartContents:
+		x = getAvailability(availList,row[4])
+		if row[5] > x:
+			row[5] = x	#setting quantity to what is avail
+			print("only " + str(x) + " available for " + row[0])
+			print("setting quantity to " + str(x))
+	
+	#-----presetn user with current order and prompt for confirm-----
+	header("ORDER CONFIRMATION")
+	print("Cart Contents")
+	for value in titles:
+		print1(value + ", ")
+	printShortenedList(cartContents)
+	
+	if len(answers) != len(prompts):
+		choice = False
+		print("ERROR answers != prompts")
+		print("Answers: " + str(len(answers)) + " Prompts: " + str(len(prompts)))
+		returnToPreviousMessage("aborting...")
+	else:
+		for x in range(0, len(answers)):
+			print (prompts[x] + ":\t" + answers[x])
+	
+	choice = confirm("Submit order?")
+	
+	if choice:
+		timestamp = str(datetime.now().date())
+		answers.append(orderID)
+		answers.append(student_id)
+		answers.append(timestamp)
+		answers.append("new")
+		# prompts = ["Credit Card Number", "EXP date MM/YYYY","Card Issuer (VISA/Mastercard/AMEX)", "SHIP SPEED" ]
+		sql = "INSERT INTO orders (credit_num, payment_exp, payment_type, shipment_type, id, owner_id, date_created, status) VALUES ( %s, %s, %s, %s, %s, %s, %s, %s );"
+		cursor.execute(sql,answers)
+		# cartContents format == 'select bookclass.title, bookclass.author, book.format, cartcontents.purchase_type, book.inventory_id, cartcontents.quantity'
+		sql = "INSERT INTO ordercontents (order_id, inventory_id, purchase_type, quantity) VALUES (%s, %s, %s, %s);"
+		
+		for row in cartContents:
+			cursor.execute(sql, (orderID, row[4], row[3], row[5]))
+			
+		sql = "UPDATE book SET quantity = (quantity - %s) WHERE (inventory_id = %s)"
+		for row in cartContents:
+			cursor.execute(sql, (row[5], row[2]))
+			
+		sql = "DELETE from cartcontents WHERE cart_id = %s;"
+		cursor.execute(sql, [cart_id,])
+		sql = "DELETE FROM cart WHERE id = %s;"
+		cursor.execute(sql, [cart_id,])
+
+		returnToPreviousMessage("Order success!")
+	else:
+		returnToPreviousMessage("Submission Cancelled")
+		
 	
 def addBooksToCart(student_id, cart_id, cursor):
 	options = ["ISBN-13","Title", "Author","Keywords","Publisher", "Course Name","Course ID","Instructor ID","Department Name","Cancel..."]
@@ -287,7 +374,8 @@ def deleteCart(student_id,cart_id,cursor):
 	sql = 'DELETE FROM cartcontents WHERE cart_id = %s;'
 	cursor.execute(sql,[cart_id,])
 	sql = 'DELETE FROM cart WHERE id = %s;'
-	cursor.execute(sql, [cart_id,])  #TODO - need to test
+	cursor.execute(sql, [cart_id,])
+	returnToPreviousMessage("Cart ID " + str(cart_id) + " Deleted...")
 
 
 

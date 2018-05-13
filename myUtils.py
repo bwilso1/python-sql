@@ -38,7 +38,7 @@ def getInput(promptMessage,optionsList, longFormat=True):
 def print1(message):
 	sys.stdout.write(message)
 	
-def confirm(promptMessage, parameters, longFormat=True):
+def confirm(promptMessage, parameters=None, longFormat=True):
 
 	while True:
 		if parameters is not None:
@@ -65,20 +65,28 @@ def confirm(promptMessage, parameters, longFormat=True):
 		time.sleep(0.75)
 			
 		
-def getLastID(tableName, idField='id'):
-	connection = getConnection()
-	connection.autocommit(True)
-	result = None
+def getLastID(tableName, idField='id',input_cursor=None):
+
+	sql = 'SELECT ' + idField + ' FROM ' + tableName + ';'
 	
-	try:
-		with connection.cursor() as curse:
-			sql = 'SELECT '+idField+' FROM ' + tableName +';'
-			#connection.cursor().executemany(sql, (tableName,tableName))
-			curse.execute(sql)
-			data = curse.fetchall()
-	finally:
-		connection.close()
+	if input_cursor is None:
+		connection = getConnection()
+		connection.autocommit(True)
 	
+		
+		try:
+			with connection.cursor() as curse:
+				
+
+				curse.execute(sql)
+				data = curse.fetchall()
+		finally:
+			connection.close()
+			
+	else:
+		input_cursor.execute(sql)
+		data = input_cursor.fetchall()
+		
 	result = -1
 	for myTuple in data:
 		if myTuple[0] > result:
@@ -100,9 +108,12 @@ def showAllRecords(tableName):
 	finally:
 		connection.close()
 	
-def returnToPreviousMessage():
+def returnToPreviousMessage(message=None):
+	if message is None:
+		print("Returning to previous menu...")
+	else:
+		print(message)
 	time.sleep(pauseLen)
-	print("Returning to previous menu...")
 
 def getConnection():
 	return pymysql.connect(host='localhost',
@@ -141,3 +152,11 @@ def printShortenedList(inputList):
 					print1(str(element) + ", ")
 			else:
 				print1(str(element) + " ")
+				
+def getAvailability(input_list, target_id):
+	result = 0
+	for row in input_list:
+		if row[0] == target_id:
+			return row[1]
+	
+	return result
