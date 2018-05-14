@@ -40,21 +40,7 @@ def main():
 		else:
 			print row
 		print("")
-	connection = getConnection()
-	#connection.autocommit(True)
-	result = None
-	connection.autocommit(True)
-	with connection.cursor() as curse:
-		sql = 'DELETE FROM student where (id > 2999);'
-		curse.execute(sql)
-		sql = 'INSERT INTO student (id, first_name, dob) VALUES (5000, "johnny", "1985/9/13");'
-		curse.execute(sql)
-		sql = "insert into student (id, first_name) values(%s, %s);"
-		curse.execute(sql,("4001","alex"))
 
-		junkTest(curse)
-	
-	connection.close();
 		
 	
 	
@@ -62,10 +48,10 @@ def main():
 	something = getLastID('student')
 	print(str(something) + str(type(something)))
 		
-	choice = confirm("Begin init_student?",None)
-	if choice:
-		while choice:
-			init_student()
-			choice = confirm("continue? ", None)
+	#choice = confirm("Begin init_student?",None)
+	choice = True
+	while choice:
+		init_student()
+		choice = confirm("continue? ", None)
 	
 main()

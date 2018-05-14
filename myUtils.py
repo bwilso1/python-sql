@@ -142,16 +142,34 @@ def junkTest(inCursor):
 	for row in resultList:
 		print row
 		
-def printShortenedList(inputList):
+		
+def printShortenedListTableHeaders(inputList, maxWidth = 20):
+	for value in inputList:
+		x = maxWidth - len(value) + 4
+		print1(value)
+		for y in range(0,x):
+			print1(" ")
+	
+def printShortenedListInTable(inputList,maxWidth = 20):
 	for row in inputList:
 		for element in row:
-			if element is str:
-				if len(element) > 30:
-					print1(str(element[:30]) + "... , ")
+			if type(element) is str:
+				if len(element) > maxWidth:
+					print1(element[:maxWidth] + "... ")
+					x = 0
 				else:
-					print1(str(element) + ", ")
+					x = maxWidth - len(element) + 4
+					print1(element)
+
 			else:
-				print1(str(element) + " ")
+				length = len(str(element))
+				x = maxWidth - length + 4
+				print1(str(element))
+			
+			for value in range(0,x):
+				print1(" ")
+			
+		print("")
 				
 def getAvailability(input_list, target_id):
 	result = 0

@@ -3,10 +3,11 @@ from pymysql.err import *
 from datetime import datetime
 
 def init_student():
-	header("Student Module")
+	
 	options = ["Create New Student","Log in as existing student","Return to Main Menu"]
 	choice = -1
 	while choice != (len(options) -1):
+		header("Student Module")
 		choice = getInput("Select Option", options)
 		if choice == 0:
 			createStudent()
@@ -22,7 +23,7 @@ def createStudent():
 	#myID = getLastID("student")
 	choice = True
 	
-	dataTypes = ["first name","last name","email","date of birth","address","phone","school/university","major",
+	dataTypes = ["first name","last name","email","date of birth (YYYY-MM-DD)","address","phone","school/university","major",
 			   "year (1-4)","status (undergrad/graduate)"]
 	answers = []
 	while choice:
@@ -99,11 +100,11 @@ def studentLogin():
 				else:
 					print("please enter some text")
 				
-		returnToPreviousMessage()
+		#returnToPreviousMessage()
 
 		
 def viewStudentOptions(student_id):
-	options = ["View Saved Carts/Place Order", "Create new Cart", "Delete Cart", "View/Cancel Orders", "Rate Book","Logout"]
+	options = ["View Carts/Place Order", "Create new Cart", "Delete Cart", "View/Cancel Orders", "Rate Book","Logout"]
 	choice = -1
 	while choice != (len(options) -1):
 		header("Student Menu for ID: "+ str(student_id))
@@ -143,7 +144,7 @@ def viewSavedCartsList(student_id, delete=False):
 				if delete:
 					choice = getInput("Select Cart to DELETE\n\tcart_id, owner_id, date_created, date_updated",cartList)
 				else:
-					choice = getInput("Select Cart to view\n\tcart_id, owner_id, date_created, date_updated",cartList)
+					choice = getInput("Select Cart to View/Order\n\tcart_id, owner_id, date_created, date_updated",cartList)
 				if choice != (len(cartList) - 1):  #make sure they didn't hit "back"
 				
 					if delete:
@@ -162,7 +163,7 @@ def viewSavedCartsList(student_id, delete=False):
 def viewCart(student_id, cart_id, cursor):
 	sql = 'select bookclass.title, bookclass.author, book.format, cartcontents.purchase_type, book.inventory_id, cartcontents.quantity from (cartContents, book, bookclass) where (cartcontents.cart_id = %s and cartcontents.inventory_id = book.inventory_id and book.ISBN13 = bookclass.ISBN13);'
 	titles = ["Title", "Author","Format", "Transaction Type", "Inventory ID", "Quantity"]
-	options = ["Add Books to cart","Delete Cart", "Order Books in Cart", "Return to previous menu"]
+	options = ["Add Books to cart", "Order Books in Cart", "Return to previous menu"]
 
 	choice = -1
 	while choice != (len(options) -1):
@@ -174,19 +175,24 @@ def viewCart(student_id, cart_id, cursor):
 		header("Viewing Cart.  Student_ID: " + str(student_id) + "  CartID: " + str(cart_id))
 		if len(resultsList) == 0:
 			print("<cart is empty>")
+			isEmpty = True
 		else:
-			for value in titles:
-				print1(value + "\t")
-			printShortenedList(resultsList)
-		
+			maxWidth = 20
+			printShortenedListTableHeaders(titles, maxWidth)
+			print("")
+			printShortenedListInTable(resultsList,maxWidth)  #TODO - check here
+			isEmpty = False
 		choice = getInput("Choose Option: ",options)
 		if choice == 0:
 			addBooksToCart(student_id, cart_id, cursor)
+
 		elif choice == 1:
-			deleteCart(student_id,cart_id,cursor)
-		elif choice == 2:
 			#prompt user for payment info, check quantities, copy into order, delete cart.
-			placeOrder(student_id,cart_id, cursor)
+			if isEmpty:
+				returnToPreviousMessage("No books to order, place some in cart first...")
+			else:
+				placeOrder(student_id,cart_id, cursor)
+	returnToPreviousMessage()
 		
 		
 def createNewCart(student_id):
@@ -205,7 +211,7 @@ def createNewCart(student_id):
 		connection.close()
 	
 	print("Cart Creation success! Cart ID: " + str(getLastID('cart')))
-	returnToPreviousMessage()
+	returnToPreviousMessage("To purchase books, goto 'View Carts'...")
 	
 def viewOrderList(student_id):  #TODO - Need to implement
 	print('not yet implemented')
@@ -227,49 +233,55 @@ def placeOrder(student_id,cart_id, cursor): #TODO - Need to debug.
 	cursor.execute(sql, [cart_id,])
 	resultTuple = cursor.fetchall()
 	cartContents = tupleTransform(resultTuple,False)
-	for value in titles:
-		print1(value + ", ")
-	printShortenedList(cartContents)
+	
+	printShortenedListTableHeaders(titles)
+	print(" ")
+	printShortenedListInTable(cartContents)
 	
 	choice = confirm("continue with order?")
-	while choice is False:
-		answers[:] = []
-		for value in prompts:
-			answers.append(raw_input("Enter "+value+": "))
-			
-		x = getInput("Select Shipping Speed",ship_speeds,True)
-		answers.append( ship_speeds[x] )
-		choice = confirm("Is this info correct?",answers)
+	if choice:
+		correct = False
+		while correct is False:
+			answers[:] = []
+			for value in prompts:
+				answers.append(raw_input("Enter "+value+": "))
+				
+			x = getInput("Select shipping speed",ship_speeds,True)
+			answers.append( ship_speeds[x] )
+			correct = confirm("Is this info correct?",answers)
 
 	
-	#-----check avail quantities & adjust ------
-	sql = "SELECT inventory_id, quantity from book;"
-	cursor.execute(sql)
-	availList = cursor.fetchall()
-	for row in cartContents:
-		x = getAvailability(availList,row[4])
-		if row[5] > x:
-			row[5] = x	#setting quantity to what is avail
-			print("only " + str(x) + " available for " + row[0])
-			print("setting quantity to " + str(x))
-	
-	#-----presetn user with current order and prompt for confirm-----
-	header("ORDER CONFIRMATION")
-	print("Cart Contents")
-	for value in titles:
-		print1(value + ", ")
-	printShortenedList(cartContents)
-	
-	if len(answers) != len(prompts):
-		choice = False
-		print("ERROR answers != prompts")
-		print("Answers: " + str(len(answers)) + " Prompts: " + str(len(prompts)))
-		returnToPreviousMessage("aborting...")
-	else:
-		for x in range(0, len(answers)):
-			print (prompts[x] + ":\t" + answers[x])
-	
-	choice = confirm("Submit order?")
+		#-----check avail quantities & adjust ------
+		sql = "SELECT inventory_id, quantity from book;"
+		cursor.execute(sql)
+		temp = cursor.fetchall()
+		availList = tupleTransform(temp,False)
+		for row in cartContents:
+			x = getAvailability(availList,row[4])
+			if row[5] > x:
+				row[5] = x	#setting quantity to what is avail
+				print("only " + str(x) + " available for " + row[0])
+				print("setting quantity to " + str(x))
+		
+		#-----presetn user with current order and prompt for confirm-----
+		header("ORDER CONFIRMATION")
+		print("Cart Contents")
+		
+		printShortenedListTableHeaders(titles)
+		printShortenedListInTable(cartContents)
+		
+		prompts.append("Shipping Speed")
+		print(" ")
+		if len(answers) != len(prompts):
+			choice = False
+			print("ERROR answers != prompts")
+			print("Answers: " + str(len(answers)) + " Prompts: " + str(len(prompts)))
+			returnToPreviousMessage("aborting...")
+		else:
+			for x in range(0, len(answers)):
+				print (prompts[x] + ":\t" + answers[x])
+		
+		choice = confirm("Submit order?")
 	
 	if choice:
 		timestamp = str(datetime.now().date())
@@ -288,7 +300,7 @@ def placeOrder(student_id,cart_id, cursor): #TODO - Need to debug.
 			
 		sql = "UPDATE book SET quantity = (quantity - %s) WHERE (inventory_id = %s)"
 		for row in cartContents:
-			cursor.execute(sql, (row[5], row[2]))
+			cursor.execute(sql, (row[5], row[4]))
 			
 		sql = "DELETE from cartcontents WHERE cart_id = %s;"
 		cursor.execute(sql, [cart_id,])
@@ -303,7 +315,7 @@ def placeOrder(student_id,cart_id, cursor): #TODO - Need to debug.
 def addBooksToCart(student_id, cart_id, cursor):
 	options = ["ISBN-13","Title", "Author","Keywords","Publisher", "Course Name","Course ID","Instructor ID","Department Name","Cancel..."]
 	searchTitles = ["ISBN13","title","author","keywords","publisher","course","course_id","instructor_id","department"]
-	resultTitles = ["ISBN13","title","author","publisher","book quality","format", "#avail","inventory id"]
+	resultTitles = ["ISBN13","title","author","publisher","book quality","format", "#avail","inventory id", "Book Rating"]
 	header("Book Search for Student_ID: "+str(student_id)+ "  Cart_ID: "+str(cart_id))
 	choice = getInput("Select Book Search Type",options)
 	
@@ -322,12 +334,12 @@ def addBooksToCart(student_id, cart_id, cursor):
 	if choice < 5:
 		#search bookClass Table
 		
-		sql = 'SELECT book.ISBN13, bookclass.title, bookclass.author, bookclass.publisher, book.quality, book.format, book.quantity , book.inventory_id FROM (book, bookclass)  WHERE (book.ISBN13 = bookclass.ISBN13 AND '
+		sql = 'SELECT book.ISBN13, bookclass.title, bookclass.author, bookclass.publisher, book.quality, book.format, book.quantity , book.inventory_id, bookclass.score FROM (book, bookclass)  WHERE (book.ISBN13 = bookclass.ISBN13 AND '
 		sql += searchTitles[choice] + ' LIKE "%' + templine + '%");'
 		
 	else:
 		#search bookCategory Table
-		sql = 'SELECT book.ISBN13, bookclass.title, bookclass.author, bookclass.publisher, book.quality, book.format, book.quantity , book.inventory_id FROM (book, bookclass, bookcategory) WHERE ('
+		sql = 'SELECT book.ISBN13, bookclass.title, bookclass.author, bookclass.publisher, book.quality, book.format, book.quantity , book.inventory_id, bookclass.score FROM (book, bookclass, bookcategory) WHERE ('
 		sql += 'book.ISBN13 = bookclass.ISBN13 AND book.ISBN13 = bookcategory.ISBN13 AND ' + searchTitles[choice] + ' LIKE "%' + templine + '%");'
 	cursor.execute(sql)
 	resultTuple = cursor.fetchall()
@@ -339,7 +351,8 @@ def addBooksToCart(student_id, cart_id, cursor):
 	for value in resultTitles:
 		templine += (value + "\t")
 		
-	
+	if len(resultList) == 1:
+		print("\t<no books found matching criteria>")
 	choice = getInput(templine,resultList)
 	
 	if choice != len(resultList) - 1:
