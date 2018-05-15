@@ -104,7 +104,7 @@ def studentLogin():
 
 		
 def viewStudentOptions(student_id):
-	options = ["View Carts/Place Order", "Create new Cart", "Delete Cart", "View/Cancel Orders", "Rate Book","Logout"]
+	options = ["View Carts/Place Order", "Create new Cart", "Delete Cart", "View Orders", "Cancel an Order", "Rate Book","Logout"]
 	choice = -1
 	while choice != (len(options) -1):
 		header("Student Menu for ID: "+ str(student_id))
@@ -118,6 +118,8 @@ def viewStudentOptions(student_id):
 		elif choice == 3:
 			viewOrderList(student_id)
 		elif choice == 4:
+			viewOrderList(student_id, True)
+		elif choice == 5:
 			rateBook(student_id)
 	
 	returnToPreviousMessage()
@@ -180,7 +182,7 @@ def viewCart(student_id, cart_id, cursor):
 			maxWidth = 20
 			printShortenedListTableHeaders(titles, maxWidth)
 			print("")
-			printShortenedListInTable(resultsList,maxWidth)  #TODO - check here
+			printShortenedListInTable(resultsList,maxWidth)
 			isEmpty = False
 		choice = getInput("Choose Option: ",options)
 		if choice == 0:
@@ -213,13 +215,50 @@ def createNewCart(student_id):
 	print("Cart Creation success! Cart ID: " + str(getLastID('cart')))
 	returnToPreviousMessage("To purchase books, goto 'View Carts'...")
 	
-def viewOrderList(student_id):  #TODO - Need to implement
-	print('not yet implemented')
+def viewOrderList(student_id, cancel=False):
+	connection = getConnection()
+	connection.autocommit(True)
+	
+	sql = "SELECT id, date_created, date_completed, status, shipment_type FROM orders WHERE owner_id = %s;"
+
+	with connection.cursor() as cursor:
+		cursor.execute(sql,[student_id,])
+		
+		resultsTuple = cursor.fetchall()
+		resultsList = tupleTransform(resultsTuple,True)
+		choice = -1
+		while choice != (len(resultsList) - 1):
+			if cancel:
+				header("Order cancellation menu for Student ID: " + str(student_id))
+			else:
+				header("View orders menu for Student ID: " + str(student_id))
+				print("select an order to view full details")
+			choice = getInput("Select one: ",resultsList)
+			
+			if choice != (len(resultsList) - 1):
+				if cancel:
+					if resultsList[choice][3] == "new":
+						cancelOrder(student_id, resultsList[choice][0], cursor)
+						choice = -1
+					elif resultsList[choice][3] == "cancelled":
+						print("order is already cancelled...")
+					else:
+						print("can not cancel a shipped or shipping order")
+				else:
+					viewFullOrder(student_id, resultsList[choice][0], cursor)
+			
+			returnToPreviousMessage(" ")
+			cursor.execute(sql, [student_id,])
+			resultsTuple = cursor.fetchall()
+			resultsList = tupleTransform(resultsTuple,True)
+				
+	connection.close()
+	returnToPreviousMessage()
 	
 def rateBook(student_id): #TODO - Need to implement
-	print('not yet implemented')
+	returnToPreviousMessage('not yet implemented')
 
-def placeOrder(student_id,cart_id, cursor): #TODO - Need to debug.
+def placeOrder(student_id,cart_id, cursor):
 	prompts = ["Credit Card Number", "EXP date MM/YYYY","Card Issuer (VISA/Mastercard/AMEX)"]
 	ship_speeds = ["standard","2-day","1-day"]
 	answers = []
@@ -310,7 +349,6 @@ def placeOrder(student_id,cart_id, cursor): #TODO - Need to debug.
 		returnToPreviousMessage("Order success!")
 	else:
 		returnToPreviousMessage("Submission Cancelled")
-		
 	
 def addBooksToCart(student_id, cart_id, cursor):
 	options = ["ISBN-13","Title", "Author","Keywords","Publisher", "Course Name","Course ID","Instructor ID","Department Name","Cancel..."]
@@ -382,7 +420,6 @@ def addBooksToCart(student_id, cart_id, cursor):
 		sql = "UPDATE cart SET update_date = %s WHERE (id = %s);"
 		cursor.execute(sql,[timestamp,cart_id])
 
-
 def deleteCart(student_id,cart_id,cursor):
 	sql = 'DELETE FROM cartcontents WHERE cart_id = %s;'
 	cursor.execute(sql,[cart_id,])
@@ -390,5 +427,44 @@ def deleteCart(student_id,cart_id,cursor):
 	cursor.execute(sql, [cart_id,])
 	returnToPreviousMessage("Cart ID " + str(cart_id) + " Deleted...")
 
+def cancelOrder(student_id, order_id,  cursor):
+	viewFullOrder(student_id, order_id, cursor)
+	temp = "\n\nConfirm cancel order #" + str(order_id) + " ?: "
+	choice = confirm(temp)
+	sql = "SELECT inventory_id, quantity FROM ordercontents WHERE order_id = %s;"
+	cursor.execute(sql,[order_id,])
+	resultsTuple = cursor.fetchall()
+	resultsList = tupleTransform(resultsTuple,False)
+	
+	# ---- add back inventory ----
+	sql = "UPDATE book SET quantity = quantity + %s WHERE inventory_id = %s;"
+	for row in resultsList:
+		cursor.execute(sql, (row[1], row[0]))
+		
+	# ---- set order to cancelled -----
+	sql = "UPDATE orders SET status = 'cancelled' WHERE id = %s;"
+	cursor.execute(sql, [order_id,])
+	returnToPreviousMessage('order cancelled...')
 
-
+def viewFullOrder(student_id, order_id, cursor):
+	sql = 'select bookclass.title, bookclass.author, book.format, ordercontents.purchase_type, book.inventory_id, ordercontents.quantity from (ordercontents, book, bookclass) where (ordercontents.order_id = %s and ordercontents.inventory_id = book.inventory_id and book.ISBN13 = bookclass.ISBN13);'
+	titles1 = ["Title","Author","Format","Transaction Type","Inventory ID","Quantity"]
+	cursor.execute(sql,[order_id,])
+	resultTuple = cursor.fetchall()
+	orderContents = tupleTransform(resultTuple,False)
+	header("View Full Order #" + str(order_id))
+	print("\nOrder Contents\n")
+	printShortenedListTableHeaders(titles1)
+	print(" ")
+	printShortenedListInTable(orderContents)
+	
+	print("\nOrder Details")
+	titles2 = ["Date Created","Date Completed","Shipment Speed","Status","Card Number","Card Issuer","Card EXP"]
+	sql = 'SELECT date_created, date_completed, shipment_type, status, credit_num, payment_type, payment_exp FROM orders WHERE id = %s;'
+	cursor.execute(sql,[order_id,])
+	resultTuple = cursor.fetchall()
+	orderParams = tupleTransform(resultTuple,False)
+	for counter, value in enumerate(titles2):
+		print(titles2[counter] + ": " + str(orderParams[0][counter]))
+		
+	
