@@ -1,18 +1,25 @@
-import pymysql
+
 
 from myUtils import *
 from studentMenu import init_student
-import time
-pauseLen = 0.75
+
 
 def main():
-	accountTypes = ["student user","support user", "admin", "quit"]
+	options = ["init student user module","init support user module", "init admin user module", "run ""quit"]
 	choice = 0
-	while choice != (len(accountTypes) - 1):
-		choice = getInput("select User Type ", accountTypes)
-		print("running choice: " + str(accountTypes[choice]))
+	while choice != (len(options) - 1):
+		header("Main Menu")
+		print("NOTE: database changes are persistent between modules")
+		choice = getInput("select option: ", options)
+		print("running choice: " + str(options[choice]))
 		if choice == 0:
 			init_student()
+		if choice == 1:
+			pauseMessage("not yet implemented...")
+		if choice == 2:
+			pauseMessage("not yet implemented...")
+		if choice == 3:
+		
 
 
 

@@ -1,7 +1,18 @@
 import time
 import sys
 import pymysql
+
+# ------ GLOBAL VARS --------
 pauseLen = 0.75
+
+# used by getConnection()
+proj_host = 'localhost'
+proj_user = 'root'
+proj_password='alpha'
+proj_db = 'bookfetch'
+
+
+#------ UTILITY FUNCTIONS -------
 
 def getInput(promptMessage,optionsList, longFormat=True):
 	choice = -1
@@ -108,7 +119,7 @@ def showAllRecords(tableName):
 	finally:
 		connection.close()
 	
-def returnToPreviousMessage(message=None):
+def pauseMessage(message=None):
 	if message is None:
 		print("Returning to previous menu...")
 	else:
@@ -116,10 +127,10 @@ def returnToPreviousMessage(message=None):
 	time.sleep(pauseLen)
 
 def getConnection():
-	return pymysql.connect(host='localhost',
-	user='root',
-	password='alpha',
-	db='bookfetch')
+	return pymysql.connect(host=proj_host,
+	user=proj_user,
+	password=proj_password,
+	db=proj_db)
 
 def tupleTransform(collection , appendQuit=True):
 	result = []
