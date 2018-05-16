@@ -73,6 +73,8 @@ def init_query_menu():
 				listBooksRate3(cursor)
 			elif choice == 10:
 				function10(cursor)
+			elif choice == 11:
+				function11(cursor)
 			
 			if choice != (len(options) - 1):
 				junk = raw_input("\npress enter to continue...")
@@ -192,3 +194,6 @@ def function10(cursor):
 	titles = ["Book Title","Num of orders containing book", "Rating"]
 	results = cursor.fetchall()
 	printQueryInTable(results,titles,70)
+	
+def function11(cursor):
+	print()
