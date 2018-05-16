@@ -75,6 +75,8 @@ def init_query_menu():
 				function10(cursor)
 			elif choice == 11:
 				function11(cursor)
+			elif choice == 12:
+				function12(cursor)
 			
 			if choice != (len(options) - 1):
 				junk = raw_input("\npress enter to continue...")
@@ -196,4 +198,49 @@ def function10(cursor):
 	printQueryInTable(results,titles,70)
 	
 def function11(cursor):
-	print()
+	sql = "select bookcategory.department, avg(ordercontents.quantity) FROM bookcategory, book, ordercontents WHERE (bookcategory.isbn13 = book.ISBN13 AND book.inventory_id = ordercontents.inventory_id) group by(bookcategory.department);"
+	cursor.execute(sql)
+	titles = ["Department", "Average books ordered per department"]
+	results = cursor.fetchall()
+	printQueryInTable(results,titles,70)
+	
+def function12(cursor):
+	sql = 'select university.name, course.department, course.name, count(teaches.instructor_id) FROM university,course,teaches WHERE(teaches.course_id = course.id AND course.school = university.name)  group by (teaches.course_id) order by course.department;'
+	cursor.execute(sql)
+	titles = ["University Name", "Department", "Course Name", "# Prof Teaching course"]
+	results = cursor.fetchall()
+	printQueryInTable(results,titles,50)
+
+def function13(cursor):
+	titles = ["University Name","Book Title",]
+	sql = "select university.name, sum(ordercontents.quantity), sum(book.cost) " \
+		 "FROM university, book, bookclass, bookcategory, orders, ordercontents WHERE " \
+		 "(book.ISBN13 = bookclass.ISBN13 AND bookcategory.school = university.name " \
+		 "AND bookcategory.ISBN13 = book.ISBN13 AND book.inventory_id = ordercontents.inventory_id " \
+		 "AND ordercontents.order_id = orders.id) group by(university.name);"
+	cursor.execute(sql)
+	results = cursor.fetchall()
+	printQueryInTable(results,titles,50)
+	
+def function14(cursor):
+	titles = ["Employee ID (PK)","F Name","L Name","Count of Tickets Created"]
+	sql = "select employee.id, employee.first_name, employee.last_name ,count(ticket.id) FROM employee, ticket WHERE employee.id = ticket.service_id AND ticket.student_id is NULL;"
+	cursor.execute(sql)
+	results = cursor.fetchall()
+	printQueryInTable(results,titles,50)
+	
+def function15(cursor):
+	titles = ["ID (PK)","First Name","Last Name","Salary"]
+	sql = "select id, first_name,last_name, salary FROM employee WHERE (role like "admin%")ORDER by salary desc;"
+	cursor.execute(sql)
+	results = cursor.fetchall()
+	printQueryInTable(results,titles,50)
+	
+def function16(cursor):
+	titles = ["ID (PK)","First Name","Last Name", "# Tickets closed/completed"]
+	sql = 'select employee.id, first_name, last_name, count(ticket.id) FROM employee,ticket WHERE (employee.id = admin_id AND (ticket.status = "completed" OR ticket.status = "closed"));'
+	cursor.execute(sql)
+	results = cursor.fetchall()
+	printQueryInTable(results,titles,50)
+	
+def function17(cursor):
