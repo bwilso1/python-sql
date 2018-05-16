@@ -255,8 +255,91 @@ def viewOrderList(student_id, cancel=False):
 	connection.close()
 	printPauseMessage()
 	
-def rateBook(student_id): #TODO - Need to implement
-	printPauseMessage('not yet implemented')
+def rateBook(student_id):
+	connection = getConnection()
+	connection.autocommit(True)
+	
+	with connection.cursor() as cursor:
+	
+		options = ["ISBN-13","Title","Author","Keywords","Publisher","Course Name","Course ID","Instructor ID",
+				 "Department Name","Cancel..."]
+		searchTitles = ["ISBN13","title","author","keywords","publisher","course","course_id","instructor_id","department"]
+		resultTitles = ["ISBN13","title","author","publisher","book quality","format","#avail","inventory id",
+					 "Book Rating"]
+		header("Rate Search for Student_ID: " + str(student_id))
+		choice = getInput("Select Book Search Type",options)
+		
+		confirmation = True
+		while confirmation:
+			templine = raw_input("Enter Search Criteria for " + options[choice] + ": \nPartial Input is ok").strip()
+			if templine is not None:
+				if templine != "":
+					confirmation = confirm("Is this correct?",[templine,])
+					confirmation = not confirmation
+				else:
+					print("enter non whitespace")
+			else:
+				print("enter non whitespace")
+		
+		if choice < 5:
+			#search bookClass Table
+			
+			sql = 'SELECT book.ISBN13, bookclass.title, bookclass.author, bookclass.publisher, book.quality, book.format, book.quantity , book.inventory_id, bookclass.score FROM (book, bookclass)  WHERE (book.ISBN13 = bookclass.ISBN13 AND '
+			sql += searchTitles[choice] + ' LIKE "%' + templine + '%");'
+		
+		else:
+			#search bookCategory Table
+			sql = 'SELECT book.ISBN13, bookclass.title, bookclass.author, bookclass.publisher, book.quality, book.format, book.quantity , book.inventory_id, bookclass.score FROM (book, bookclass, bookcategory) WHERE ('
+			sql += 'book.ISBN13 = bookclass.ISBN13 AND book.ISBN13 = bookcategory.ISBN13 AND ' + searchTitles[
+				choice] + ' LIKE "%' + templine + '%");'
+		cursor.execute(sql)
+		resultTuple = cursor.fetchall()
+		resultList = tupleTransform(resultTuple,False)
+		resultList.append("Cancel")
+		
+		choice = -1
+		templine = ""
+		for value in resultTitles:
+			templine += (value + "\t")
+		
+		if len(resultList) == 1:
+			print("\t<no books found matching criteria>")
+		choice = getInput(templine,resultList)
+		
+		success = False
+		if choice != len(resultList) - 1:
+			conf = False
+			while conf is False:
+				rate = raw_input("enter rating for book: ")
+				try:
+					rate = float(rate)
+					conf = confirm("Is this correct? ", [rate,])
+				except ValueError:
+					rate = 0
+					conf = False
+					print("Enter a valid number")
+			
+			print("Submit rating of " + str(rate) + " for book: " + resultList[choice][1])
+			conf = confirm("Continue? ")
+			
+			if conf:
+				sql = "INSERT INTO bookratings (student_id, isbn13, rating) VALUES (%s, %s, %s);"
+				try:
+					cursor.execute(sql, [student_id, resultList[choice][0], rate] )
+					success = True
+				except InternalError as e:
+					print("Error: " + str(e.args[1]))
+				except IntegrityError as e:
+					print("You have already rated this book\nChanging ratings is not supported at this time")
+
+				finally:
+					connection.close()
+		
+		if success:
+			print("rating successfully entered")
+		else:
+			print("rating failed")
+		
 
 def placeOrder(student_id,cart_id, cursor):
 	prompts = ["Credit Card Number", "EXP date MM/YYYY","Card Issuer (VISA/Mastercard/AMEX)"]
@@ -359,7 +442,7 @@ def addBooksToCart(student_id, cart_id, cursor):
 	
 	confirmation = True
 	while confirmation:
-		templine = raw_input("Enter Search Text for " + options[choice]+": ").strip()
+		templine = raw_input("Enter Search Criteria for " + options[choice] + ": \nPartial Input is ok").strip()
 		if templine is not None:
 			if templine != "":
 				confirmation = confirm("Is this correct?",[templine,])
