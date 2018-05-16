@@ -47,7 +47,7 @@ def getInput(promptMessage,optionsList, longFormat=True):
 	return choice
 
 def print1(message):
-	sys.stdout.write(message)
+	sys.stdout.write(str(message))
 	
 def confirm(promptMessage, parameters=None, longFormat=True):
 
@@ -119,7 +119,7 @@ def showAllRecords(tableName):
 	finally:
 		connection.close()
 	
-def pauseMessage(message=None):
+def printPauseMessage(message=None):
 	if message is None:
 		print("Returning to previous menu...")
 	else:
@@ -189,3 +189,63 @@ def getAvailability(input_list, target_id):
 			return row[1]
 	
 	return result
+
+def printQueryInTable(collection,titlesList,maxWidth = 20):
+	result = []
+	rows = len(collection)
+	for i in range(0,rows):
+		temp = list(collection[i])
+		result.append(temp)
+	
+	#start setting max width to len of col header
+	widthList = []
+	for element in titlesList:
+		widthList.append(len(element))
+	
+	# see if any elements are wider than col title
+	for row in result:
+		for i,element in enumerate(row):
+			x = len(str(element))
+			if x > widthList[i]:
+				widthList[i] = x
+
+					
+	# print column headers
+	for i,element in enumerate(titlesList):
+		if widthList[i] > maxWidth:
+			diff = maxWidth - len(element) + 4
+			print1(element)
+		else:
+			diff = widthList[i] - len(str(element)) + 4
+			print1(element)
+			
+		for value in range(0,diff):
+			print1(" ")
+	
+	print(" ")
+	for row in result:
+		for i,element in enumerate(row):
+			if widthList[i] > maxWidth:
+				if element is not None:
+					if len(str(element)) > maxWidth:
+						print1(element[:maxWidth] + "... ")
+						diff = 0
+					else:
+						diff = maxWidth - len(str(element)) + 4
+						print1(element)
+				else:
+					diff = maxWidth + 4
+					
+				for value in range(0,diff):
+					print1(" ")
+			else:
+				#width <= maxWidth
+				if element is not None:
+					diff = widthList[i] - len(str(element))
+					print1(element)
+				else:
+					diff = widthList[i]
+					
+				for value in range(0,diff):
+					print1(" ")
+		print(" ")

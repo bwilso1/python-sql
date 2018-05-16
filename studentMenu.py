@@ -14,7 +14,7 @@ def init_student():
 		elif choice == 1:
 			studentLogin()
 		
-	pauseMessage()
+	printPauseMessage()
 
 
 # noinspection SqlNoDataSourceInspection
@@ -24,7 +24,7 @@ def createStudent():
 	choice = True
 	
 	dataTypes = ["first name","last name","email","date of birth (YYYY-MM-DD)","address","phone","school/university","major",
-			   "year (1-4)","status (undergrad/graduate)"]
+			   "year (1-4)","status (UnderGrad/Graduate)"]
 	answers = []
 	while choice:
 		header("Student Account Creation")
@@ -63,7 +63,7 @@ def createStudent():
 	else:
 		print("Account creation fail...")
 		
-	pauseMessage()
+	printPauseMessage()
 	#CREATE TABLE Student(id integer, first_name varchar(50), last_name varchar(50), dob date, email varchar(200), address varchar(200), phone varchar(16), school varchar(50), major varchar(30), year varchar(10), status varchar(10),
 
 # noinspection SqlNoDataSourceInspection
@@ -100,7 +100,7 @@ def studentLogin():
 				else:
 					print("please enter some text")
 				
-		#pauseMessage()
+		#printPauseMessage()
 
 		
 def viewStudentOptions(student_id):
@@ -122,7 +122,7 @@ def viewStudentOptions(student_id):
 		elif choice == 5:
 			rateBook(student_id)
 	
-	pauseMessage()
+	printPauseMessage()
 			
 			
 def viewSavedCartsList(student_id, delete=False):
@@ -160,7 +160,7 @@ def viewSavedCartsList(student_id, delete=False):
 			cartList = tupleTransform(cartTuples)
 			
 	connection.close()
-	pauseMessage()
+	printPauseMessage()
 
 def viewCart(student_id, cart_id, cursor):
 	sql = 'select bookclass.title, bookclass.author, book.format, cartcontents.purchase_type, book.inventory_id, cartcontents.quantity from (cartContents, book, bookclass) where (cartcontents.cart_id = %s and cartcontents.inventory_id = book.inventory_id and book.ISBN13 = bookclass.ISBN13);'
@@ -191,10 +191,10 @@ def viewCart(student_id, cart_id, cursor):
 		elif choice == 1:
 			#prompt user for payment info, check quantities, copy into order, delete cart.
 			if isEmpty:
-				pauseMessage("No books to order, place some in cart first...")
+				printPauseMessage("No books to order, place some in cart first...")
 			else:
 				placeOrder(student_id,cart_id, cursor)
-	pauseMessage()
+	printPauseMessage()
 		
 		
 def createNewCart(student_id):
@@ -213,7 +213,7 @@ def createNewCart(student_id):
 		connection.close()
 	
 	print("Cart Creation success! Cart ID: " + str(getLastID('cart')))
-	pauseMessage("To purchase books, goto 'View Carts'...")
+	printPauseMessage("To purchase books, goto 'View Carts'...")
 	
 def viewOrderList(student_id, cancel=False):
 	connection = getConnection()
@@ -247,16 +247,16 @@ def viewOrderList(student_id, cancel=False):
 				else:
 					viewFullOrder(student_id, resultsList[choice][0], cursor)
 			
-			pauseMessage(" ")
+			printPauseMessage(" ")
 			cursor.execute(sql, [student_id,])
 			resultsTuple = cursor.fetchall()
 			resultsList = tupleTransform(resultsTuple,True)
 				
 	connection.close()
-	pauseMessage()
+	printPauseMessage()
 	
 def rateBook(student_id): #TODO - Need to implement
-	pauseMessage('not yet implemented')
+	printPauseMessage('not yet implemented')
 
 def placeOrder(student_id,cart_id, cursor):
 	prompts = ["Credit Card Number", "EXP date MM/YYYY","Card Issuer (VISA/Mastercard/AMEX)"]
@@ -315,7 +315,7 @@ def placeOrder(student_id,cart_id, cursor):
 			choice = False
 			print("ERROR answers != prompts")
 			print("Answers: " + str(len(answers)) + " Prompts: " + str(len(prompts)))
-			pauseMessage("aborting...")
+			printPauseMessage("aborting...")
 		else:
 			for x in range(0, len(answers)):
 				print (prompts[x] + ":\t" + answers[x])
@@ -346,9 +346,9 @@ def placeOrder(student_id,cart_id, cursor):
 		sql = "DELETE FROM cart WHERE id = %s;"
 		cursor.execute(sql, [cart_id,])
 
-		pauseMessage("Order success!")
+		printPauseMessage("Order success!")
 	else:
-		pauseMessage("Submission Cancelled")
+		printPauseMessage("Submission Cancelled")
 	
 def addBooksToCart(student_id, cart_id, cursor):
 	options = ["ISBN-13","Title", "Author","Keywords","Publisher", "Course Name","Course ID","Instructor ID","Department Name","Cancel..."]
@@ -425,7 +425,7 @@ def deleteCart(student_id,cart_id,cursor):
 	cursor.execute(sql,[cart_id,])
 	sql = 'DELETE FROM cart WHERE id = %s;'
 	cursor.execute(sql, [cart_id,])
-	pauseMessage("Cart ID " + str(cart_id) + " Deleted...")
+	printPauseMessage("Cart ID " + str(cart_id) + " Deleted...")
 
 def cancelOrder(student_id, order_id,  cursor):
 	viewFullOrder(student_id, order_id, cursor)
@@ -444,7 +444,7 @@ def cancelOrder(student_id, order_id,  cursor):
 	# ---- set order to cancelled -----
 	sql = "UPDATE orders SET status = 'cancelled' WHERE id = %s;"
 	cursor.execute(sql, [order_id,])
-	pauseMessage('order cancelled...')
+	printPauseMessage('order cancelled...')
 
 def viewFullOrder(student_id, order_id, cursor):
 	sql = 'select bookclass.title, bookclass.author, book.format, ordercontents.purchase_type, book.inventory_id, ordercontents.quantity from (ordercontents, book, bookclass) where (ordercontents.order_id = %s and ordercontents.inventory_id = book.inventory_id and book.ISBN13 = bookclass.ISBN13);'

@@ -4,7 +4,13 @@ from datetime import datetime
 import sys
 
 def main():
-	
+	string1 = "hello"
+	string2 = "hello"
+	string3 = 'hello'
+	print (string1 == string2)
+	print (string1 is string2)
+	print (string1 is string3)
+	print (string1 == string3)
 	'''
 	arr1 = [['a','b','c'], [1,2,3,4], "something", ["alpha","bravo","charlie","delta","echo"]]
 	sys.stdout.write("something")
