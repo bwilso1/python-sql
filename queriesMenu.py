@@ -232,7 +232,7 @@ def function14(cursor):
 	
 def function15(cursor):
 	titles = ["ID (PK)","First Name","Last Name","Salary"]
-	sql = "select id, first_name,last_name, salary FROM employee WHERE (role like "admin%")ORDER by salary desc;"
+	sql = "select id, first_name,last_name, salary FROM employee WHERE (role like 'admin%')ORDER by salary desc;"
 	cursor.execute(sql)
 	results = cursor.fetchall()
 	printQueryInTable(results,titles,50)
