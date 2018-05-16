@@ -22,7 +22,10 @@ I have basic "press y to continue" catches, but try to have clean input. not all
 
 Please do not try to purchase a negative number of books or things like that.
 
+
 ==== Misc ====
 I've tried to make the prompts user-friendly and intuitive.
 
 The only weird one is that to purchase a book, a cart needs to be created, then select that cart to add books & purchase.
+
+Sometimes the "press enter to continue" locks up a bit. just hit enter until it goes through.
