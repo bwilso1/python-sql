@@ -6,6 +6,7 @@ def init_employee():
 	connection = getConnection()
 	connection.autocommit(True)
 	
+	choice = -1
 	with connection.cursor() as cursor:
 		while choice != (len(options) - 1):
 			header("Employee Module")
@@ -75,7 +76,7 @@ def modifyTicket(employee_id,cursor): #todo need to debug
 				conf = False
 				while conf is False:
 					admin = getAdmin(cursor)
-					description = raw_input("Enter description: ").strip()
+					description = raw_input("Enter description (leave blank to skip): ").strip()
 					
 					print("Admin ID: " + str(admin))
 					print("Description: " + description)
@@ -83,13 +84,17 @@ def modifyTicket(employee_id,cursor): #todo need to debug
 				if description == "":
 					description = None
 					
-				conf = confirm("Submit Changes? ")
+
+				conf = confirm("Submit?")
 				if conf:
 					timestamp = str(datetime.now().date())
 					sql = "UPDATE ticket SET admin_id = %s WHERE id = %s;"
 					cursor.execute(sql, [admin,resultsList[choice][0]])
 					sql = "UPDATE ticket SET status = 'assigned' WHERE id = %s;"
 					cursor.execute(sql, (resultsList[choice][0],))
+					if description is not None:
+						sql ="UPDATE ticket SET description = %s WHERE id = %s;"
+						cursor.execute(sql,(description,resultsList[choice][0]) )
 					sql = "INSERT INTO tickethistory (ticket_id, service_id, admin_id, update_date, status) VALUES (%s, %s, %s, %s, %s)"
 					cursor.execute(sql, (resultsList[choice][0],employee_id,admin,timestamp,"assigned"))
 					choice = -1
@@ -104,5 +109,7 @@ def getAdmin(cursor):
 	cursor.execute(sql)
 	result = cursor.fetchall()
 	resultList = tupleTransform(result,False)
+	print("choose and admin")
+	choice =  getInput("select one :",resultList)
 	
-	return getInput("select one :",resultList)
+	return resultList[choice][0]
