@@ -33,7 +33,7 @@ def selectEmployee(cursor, empType):
 		header("Admin login")
 		choice = getInput("select one",resultList)
 		if choice != len(resultList) -1:
-			if empType == 0:
+			if empType == 1:
 				superAdminOps(cursor,resultList[choice][0])
 			else:
 				adminOps(cursor,resultList[choice][0])
@@ -41,15 +41,18 @@ def selectEmployee(cursor, empType):
 	printPauseMessage()
 	
 def superAdminOps(cursor, employee_id):
-	print("<not yet implemented>")
-	printPauseMessage(" ")
+	options = ["Return",]
+	
+	header("Super Admin Options")
+	print("Sorry, this module has not been implemented")
+	input = raw_input("Press enter to continue...")
 	
 def adminOps(cursor, employee_id):
 	options = ["Add university","Add books to Inventory", "Add new book to inventory","Add new course","Return..."]
 	choice = -1
 	while choice != len(options) -1:
 		header("Admin Menu.  ID: "+str(employee_id))
-		choice = getInput("select one")
+		choice = getInput("select one",options)
 		if choice == 0:
 			createNewUniversity(cursor)
 		elif choice == 1:
@@ -108,6 +111,9 @@ def addInventory(cursor):
 			sql = "update book SET quantity = quantity + %s WHERE inventory_id = %s;"
 			cursor.execute(sql,(quant,bookID))
 			print("Sucess!")
+			cursor.execute(sql)
+			result = cursor.fetchall()
+			resultList = tupleTransform(result,True)
 			
 			
 def createNewCourse(cursor):

@@ -4,6 +4,7 @@ from myUtils import *
 from studentMenu import init_student
 from queriesMenu import init_query_menu
 from employeeMenu import init_employee
+from adminMenu import init_admin_menu
 
 def main():
 	options = ["init student user module","init support user module", "init admin user module", "run queries & reports", "quit"]
@@ -20,7 +21,7 @@ def main():
 		if choice == 1:
 			init_employee()
 		if choice == 2:
-			printPauseMessage("admin module not yet implemented...")
+			init_admin_menu()
 		if choice == 3:
 			init_query_menu()
 		if choice == 4:
