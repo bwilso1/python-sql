@@ -281,4 +281,18 @@ def function20(cursor):
 	print("<Not yet implemented")
 	
 def function21(cursor):
-	print('something')
+	print('<not yet implemented>')
+	
+def function22(cursor):
+	titles = ['book title',"avg rating","# students rated"]
+	sql = 'select bookclass.title, avg(bookratings.rating), count(bookratings.student_id) FROM bookclass,bookratings WHERE bookratings.isbn13 = bookclass.ISBN13 group by bookclass.isbn13;'
+	cursor.execute(sql)
+	results = cursor.fetchall()
+	printQueryInTable(results,titles,50)
+	
+def function23(cursor):
+	titles = ["Book Title", "Rating Given By Student","First Name","Last Name","Student School"]
+	sql = 'select bookclass.title, bookratings.rating, student.first_name, student.last_name, student.school FROM student, bookclass, bookratings WHERE student.id = bookratings.student_id AND bookratings.isbn13 = bookclass.isbn13 order by student.school;'
+	cursor.execute(sql)
+	results = cursor.fetchall()
+	printQueryInTable(results,titles,50)
