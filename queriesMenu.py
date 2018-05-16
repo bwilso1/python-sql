@@ -1,4 +1,5 @@
 from myUtils import *
+from datetime import datetime
 
 studentTitles = ["id (PK)","F name","L name", "DOB","email","address","phone number","School","Major","Year","Status"]
 options = ["List all students attending 'UMBC'",
@@ -244,3 +245,40 @@ def function16(cursor):
 	printQueryInTable(results,titles,50)
 	
 def function17(cursor):
+	titles = ["Ticket Status", "# of Tickets"]
+	sql = 'select ticket.status, count(ticket.id) FROM ticket group by ticket.status;'
+	cursor.execute(sql)
+	results = cursor.fetchall()
+	printQueryInTable(results,titles)
+	
+def function18(cursor):
+	sql = 'SELECT ticket.date_created, tickethistory.update_date, ticket.id FROM ticket,tickethistory WHERE (ticket.id = tickethistory.ticket_id AND ticket.status = tickethistory.status AND ticket.status = "completed" OR ticket.status = "closed");'
+	cursor.execute(sql)
+	results = cursor.fetchall()
+	resultsList = tupleTransform(results,False)
+	
+	sums = 0.0
+	total = 0.0
+	for row in resultsList:
+		d1 = datetime.strptime(row[0],"%Y-%m-%d")
+		d2 = datetime.strptime(row[1],"%Y-%m-%d")
+		sums += (d2 - d1)
+		total += 1
+		
+	print("avg time for ticket completion: " + str(sums/total))
+	
+def function19(cursor):
+	titles = ["Ticket ID (PK)","Ticket Title", "Ticket Category","Student ID","Service ID","Admin ID", "Date Created", "Description","Solution","Status","HIST Update Date","HIST Status"]
+	sql = 'select ticket.id, ticket.title, ticket.category, ticket.student_id, ticket.service_id, ' \
+		 'ticket.admin_id,  ticket.date_created, ticket.description, ticket.solution, ticket.status, ' \
+		 'tickethistory.update_date, tickethistory.status FROM ticket,tickethistory ' \
+		 'WHERE ticket.id = tickethistory.ticket_id AND (ticket.status = "completed" OR ticket.status = "closed");'
+	cursor.execute(sql)
+	results = cursor.fetchall()
+	printQueryInTable(results,titles,25)
+
+def function20(cursor):
+	print("<Not yet implemented")
+	
+def function21(cursor):
+	print('something')
