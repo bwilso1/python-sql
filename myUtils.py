@@ -239,12 +239,12 @@ def printQueryInTable(collection,titlesList,maxWidth = 20):
 				for value in range(0,diff):
 					print1(" ")
 			else:
-				#width <= maxWidth
+				#widthList <= maxWidth
 				if element is not None:
-					diff = widthList[i] - len(str(element))
+					diff = (widthList[i] - len(str(element))) + 4
 					print1(element)
 				else:
-					diff = widthList[i]
+					diff = widthList[i] + 4
 					
 				for value in range(0,diff):
 					print1(" ")

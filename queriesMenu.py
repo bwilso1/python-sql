@@ -53,37 +53,59 @@ def init_query_menu():
 				displayOption(choice)
 				
 			if choice == 0:
-				list_UMBC_students(cursor,choice)
+				function0(cursor,choice)
 			elif choice == 1:
-				listAllGraduate(cursor,choice)
+				function1(cursor,choice)
 			elif choice == 2:
-				listCompSci2Books(cursor,choice)
+				function2(cursor,choice)
 			elif choice == 3:
-				listPopularBooks(cursor,choice)
+				function3(cursor,choice)
 			elif choice == 4:
-				listBookByCategory(cursor,choice)
+				function4(cursor,choice)
 			elif choice == 5:
-				listBookByCourse(cursor,choice)
+				function5(cursor,choice)
 			elif choice == 6:
-				listPurchasedNoCourse(cursor,choice)
+				function6(cursor,choice)
 			elif choice == 7:
-				listNumOfCoursesPerBook(cursor,choice)
+				function7(cursor,choice)
 			elif choice == 8:
-				listBooksLinearAlgebra(cursor,choice)
+				function8(cursor,choice)
 			elif choice == 9:
-				listBooksRate3(cursor)
+				function9(cursor)
 			elif choice == 10:
 				function10(cursor)
 			elif choice == 11:
 				function11(cursor)
 			elif choice == 12:
 				function12(cursor)
-			
+			elif choice == 13:
+				function13(cursor)
+			elif choice == 14:
+				function14(cursor)
+			elif choice == 15:
+				function15(cursor)
+			elif choice == 16:
+				function16(cursor)
+			elif choice == 17:
+				function17(cursor)
+			elif choice == 18:
+				function18(cursor)
+			elif choice == 19:
+				function19(cursor)
+			elif choice == 20:
+				function20(cursor)
+			elif choice == 21:
+				function21(cursor)
+			elif choice == 22:
+				function22(cursor)
+			elif choice == 23:
+				function23(cursor)
+				
 			if choice != (len(options) - 1):
 				junk = raw_input("\npress enter to continue...")
-			printPauseMessage(" ")
 
-def list_UMBC_students(cursor, choice):
+
+def function0(cursor,choice):
 
 	
 	sql = "SELECT * FROM student WHERE school LIKE 'UMBC' order by last_name;"
@@ -92,7 +114,7 @@ def list_UMBC_students(cursor, choice):
 
 	printQueryInTable(result,studentTitles,30)
 
-def listAllGraduate(cursor, choice):
+def function1(cursor,choice):
 
 	
 	sql = "SELECT * FROM student WHERE student.status LIKE 'grad%' ORDER BY last_name;"
@@ -101,7 +123,7 @@ def listAllGraduate(cursor, choice):
 
 	printQueryInTable(result,studentTitles,30)
 	
-def listCompSci2Books(cursor,choice):
+def function2(cursor,choice):
 	
 	
 	sql = "SELECT first_name, last_name, dob, email, student.address, phone, school,major, student.year, student.status FROM student,orders,ordercontents WHERE (student.id = orders.owner_id AND ordercontents.order_id = orders.id AND student.major like 'comp% sci%');"
@@ -113,7 +135,7 @@ def listCompSci2Books(cursor,choice):
 	else:
 		printQueryInTable(result,studentTitles,30)
 
-def listPopularBooks(cursor,choice):
+def function3(cursor,choice):
 	#Book title, book PK
 	
 	
@@ -144,7 +166,7 @@ def listPopularBooks(cursor,choice):
 	print("\n----most rented book----")
 	print("id (PK): " + str(resultsList[maxRentIndex][3]) + " rental count: " + str(resultsList[maxRentIndex][2]) + " Title: " + resultsList[maxRentIndex][1])
 		
-def listBookByCategory(cursor,choice):
+def function4(cursor,choice):
 	#Category, subcategory, book title, PK
 
 	
@@ -154,7 +176,7 @@ def listBookByCategory(cursor,choice):
 	results = cursor.fetchall()
 	printQueryInTable(results,titles, 40)
 	
-def listBookByCourse(cursor,choice):
+def function5(cursor,choice):
 	# course name, book title
 		
 	sql = "select course.name, course.id, bookclass.title FROM course, bookclass, bookcategory WHERE (bookclass.isbn13 = bookcategory.isbn13 AND course.id = bookcategory.course_id and course.department not like '%Comp% Sci%') order by course.name;"
@@ -163,31 +185,34 @@ def listBookByCourse(cursor,choice):
 	titles = ["Course Name","Course ID", "Book Title"]
 	printQueryInTable(results,titles, 40)
 	
-def listPurchasedNoCourse(cursor,choice):
-	sql = 'select book.title, book.inventory_id from orders, ordercontents,book,bookcategory,bookclass where (orders.id = ordercontents.order_id AND book.inventory_id = ordercontents.inventory_id AND bookcategory.isbn13 = bookclass.ISBN13 AND book.isbn13 = bookclass.ISBN13 AND bookcategory.course_id is NULL) group by book.inventory_id;'
+def function6(cursor,choice):
+	sql = 'select bookclass.title, book.inventory_id from orders, ordercontents, book , bookcategory , bookclass ' \
+		 'where (orders.id = ordercontents.order_id AND book.inventory_id = ordercontents.inventory_id ' \
+		 'AND bookcategory.isbn13 = bookclass.ISBN13 AND book.isbn13 = bookclass.ISBN13 ' \
+		 'AND bookcategory.course_id is NULL) group by book.inventory_id;'
 	cursor.execute(sql)
 	results = cursor.fetchall()
 	titles = ["Book Title", "Inventory ID"]
 	printQueryInTable(results,titles,40)
 
-def listNumOfCoursesPerBook(cursor,choice):
+def function7(cursor,choice):
 	sql = 'select bookclass.title, count(course_id) FROM bookclass,bookcategory WHERE bookcategory.isbn13 = bookclass.isbn13 group by bookcategory.isbn13;'
 	titles = ["Book Title", "Num of Courses"]
 	cursor.execute(sql)
 	results=cursor.fetchall()
-	printQueryInTable(results,titles,40)
+	printQueryInTable(results,titles,70)
 	
-def listBooksLinearAlgebra(cursor,choice):
+def function8(cursor,choice):
 	sql = "select bookclass.title FROM bookclass WHERE bookclass.keywords like '%linear algebra%';"
 	cursor.execute(sql)
 	titles = ["Book Title",]
 	results = cursor.fetchall()
 	printQueryInTable(results, titles,70)
 
-def listBooksRate3(cursor):
+def function9(cursor):
 	sql = "select bookclass.title , bookclass.score FROM bookclass WHERE score > 3;"
 	cursor.execute(sql)
-	titles = ["Book Title",]
+	titles = ["Book Title","Rating"]
 	results = cursor.fetchall()
 	printQueryInTable(results,titles,70)
 	
@@ -213,7 +238,7 @@ def function12(cursor):
 	printQueryInTable(results,titles,50)
 
 def function13(cursor):
-	titles = ["University Name","Book Title",]
+	titles = ["University Name","Books Per School","Total Book Cost"]
 	sql = "select university.name, sum(ordercontents.quantity), sum(book.cost) " \
 		 "FROM university, book, bookclass, bookcategory, orders, ordercontents WHERE " \
 		 "(book.ISBN13 = bookclass.ISBN13 AND bookcategory.school = university.name " \
@@ -224,7 +249,7 @@ def function13(cursor):
 	printQueryInTable(results,titles,50)
 	
 def function14(cursor):
-	titles = ["Employee ID (PK)","F Name","L Name","Count of Tickets Created"]
+	titles = ["Employee ID (PK)","F Name","L Name","Count of Tickets"]
 	sql = "select employee.id, employee.first_name, employee.last_name ,count(ticket.id) FROM employee, ticket WHERE employee.id = ticket.service_id AND ticket.student_id is NULL;"
 	cursor.execute(sql)
 	results = cursor.fetchall()
@@ -260,9 +285,13 @@ def function18(cursor):
 	sums = 0.0
 	total = 0.0
 	for row in resultsList:
-		d1 = datetime.strptime(row[0],"%Y-%m-%d")
-		d2 = datetime.strptime(row[1],"%Y-%m-%d")
-		sums += (d2 - d1)
+		d1 = datetime.strptime(str(row[0]),"%Y-%m-%d")
+		d2 = datetime.strptime(str(row[1]),"%Y-%m-%d")
+		#d1 = row[0]
+		#d2 = row[1]
+		result = d2 - d1
+		result2 = result.days
+		sums += int(result2)
 		total += 1
 		
 	print("avg time for ticket completion: " + str(sums/total))
