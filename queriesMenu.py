@@ -321,7 +321,7 @@ def function22(cursor):
 	
 def function23(cursor):
 	titles = ["Book Title", "Rating Given By Student","First Name","Last Name","Student School"]
-	sql = 'select bookclass.title, bookratings.rating, student.first_name, student.last_name, student.school FROM student, bookclass, bookratings WHERE student.id = bookratings.student_id AND bookratings.isbn13 = bookclass.isbn13 order by student.school;'
+	sql = 'select bookclass.title, bookratings.rating, student.first_name, student.last_name, student.school FROM student, bookclass, bookratings WHERE student.id = bookratings.student_id AND bookratings.isbn13 = bookclass.isbn13 AND bookratings.rating = 5 order by student.school;'
 	cursor.execute(sql)
 	results = cursor.fetchall()
 	printQueryInTable(results,titles,50)
