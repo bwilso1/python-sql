@@ -4,7 +4,7 @@
 
 
 ==== Setup ====
-this program assumes 'project insertion script v3.sql' has already been run.
+this program assumes 'project insertion script v3.sql' has already been run.  And that mysql database has been installed.
 
 
 ==== Usage: ====
